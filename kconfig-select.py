@@ -268,6 +268,11 @@ class BuildType(object, metaclass=abc.ABCMeta):
         if not name:
             name = self.get_default_config_name()
 
+        elif name[-1] == "/":
+            # FIXME: proper directory detection maybe?
+            name = os.path.join(name, self.get_default_config_name())
+        # --
+
         cdir, cmap = self.get_config_dir()
         if not cmap:
             return False
