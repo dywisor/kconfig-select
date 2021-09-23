@@ -304,6 +304,11 @@ class BuildType(object, metaclass=abc.ABCMeta):
         if not name:
             name = self.get_default_backup_name()
 
+        elif name[-1] == "/":
+            # FIXME: proper directory detection maybe?
+            name = os.path.join(name, self.get_default_backup_name())
+        # --
+
         bcfile = self.get_build_config_file_path()
         bcfile_hash = self.get_file_hash(bcfile)
         want_copy = False
