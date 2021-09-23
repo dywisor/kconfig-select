@@ -286,7 +286,10 @@ class BuildType(object, metaclass=abc.ABCMeta):
             os.makedirs(cdir, exist_ok=True)
             want_copy = True
 
-        elif name in cmap:
+        elif name not in cmap:
+            want_copy = True
+
+        else:
             def fgen(basename):
                 yield basename
 
