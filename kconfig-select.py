@@ -350,7 +350,10 @@ class BuildType(object, metaclass=abc.ABCMeta):
         # -- end if
 
         cfile = os.path.join(cdir, name)
-        cfile_link = os.path.join(cdir, self.get_default_config_name())
+        cfile_link = os.path.join(
+            os.path.dirname(cfile),   # not necessarily eq cdir (subdir..)
+            self.get_default_config_name()
+        )
 
         if want_copy:
             git_changed = []
