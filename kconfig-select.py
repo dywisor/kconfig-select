@@ -162,9 +162,11 @@ class BuildType(object, metaclass=abc.ABCMeta):
 
     def list_config_dir(self, config_dir):
         def check_name(arg):
+            # FIXME: regexp or so
             return (
                 arg
                 and (arg[0] != ".")
+                and (arg != "files")
                 and (not arg.startswith("README"))
                 and (not arg.endswith(".tmp"))
             )
@@ -419,6 +421,19 @@ class BuildrootBuildType(BuildType):
 
     def prepare_build(self):
         self.prepare_build_outoftree()
+
+        # Additionally, create a symlink <build>/local-files -> <config>/files
+        cfiles_dir = os.path.join(self.get_config_dir_path(), "files")
+        bfiles_dir = os.path.join(self.info.build_dir, "local-files")
+
+        try:
+            os.lstat(bfiles_dir)
+
+        except FileNotFoundError:
+            if os.path.isdir(cfiles_dir):
+                os.symlink(cfiles_dir, bfiles_dir)
+        # --
+    # --- end of prepare_build (...) ---
 
 # --- end of BuildrootBuildType ---
 
