@@ -29,6 +29,10 @@
 #          +- config_2021-09-01-r1
 #          +- latest => config_2021-09-01-r1
 #             (symlink to most recently stored file)
+#          +- <topic>/
+#             +- config_...
+#             +- latest => ...
+#             ("<topic>" subdirectories are optional.)
 #
 # The default config store dir is "~/git/kconfig-files".
 # (See the "-C", "--config" option.)
@@ -157,23 +161,34 @@ class BuildType(object, metaclass=abc.ABCMeta):
     # --- end of prepare_build_outoftree (...) ---
 
     def list_config_dir(self, config_dir):
-        def scan_config_dir(config_dir):
-            with os.scandir(config_dir) as dh:
-                for entry in dh:
-                    if entry.is_file(follow_symlinks=True):
-                        yield entry
+        def check_name(arg):
+            return (
+                arg
+                and (arg[0] != ".")
+                and (not arg.startswith("README"))
+                and (not arg.endswith(".tmp"))
+            )
         # ---
 
-        cmap = {
-            e.name: e for e in scan_config_dir(config_dir)
-            if (
-                (e.name[0] != ".")
-                and (not e.name.startswith("README"))
-                and (not e.name.endswith(".tmp"))
-            )
-        }
+        def scan_config_dir(config_dir, prefix=''):
+            with os.scandir(config_dir) as dh:
+                for entry in dh:
+                    if not check_name(entry.name):
+                        pass
 
-        return cmap
+                    elif entry.is_file(follow_symlinks=True):
+                        yield ((prefix + entry.name), entry)
+
+                    elif entry.is_dir(follow_symlinks=False):
+
+                        yield from scan_config_dir(
+                            entry.path,
+                            prefix=f"{prefix}{entry.name}/"
+                        )
+                    # -- end if
+        # ---
+
+        return {key: e for key, e in scan_config_dir(config_dir)}
     # --- end of list_config_dir (...) ---
 
     def get_config_dir(self, verbose=True):
@@ -196,6 +211,8 @@ class BuildType(object, metaclass=abc.ABCMeta):
         sys.stdout.write(f"{src} -> {dst}\n")
 
         dst_dir = os.path.dirname(dst)
+
+        os.makedirs(dst_dir, exist_ok=True)
 
         (tmp_fd, tmp_filepath) = tempfile.mkstemp(suffix=".tmp", dir=dst_dir, text=False)
         try:
@@ -236,8 +253,15 @@ class BuildType(object, metaclass=abc.ABCMeta):
         if not cmap:
             return False
 
-        for entry in sorted(cmap.values(), key=lambda e: e.name):
-            print(get_entry_str(entry))
+        items = sorted(cmap.items(), key=lambda kv: kv[0])
+
+        if long_format:
+            for name, entry in items:
+                print(entry.path)
+
+        else:
+            for name, entry in items:
+                print(name)
     # --- end of run_list (...) ---
 
     def run_config(self, name=None):
