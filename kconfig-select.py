@@ -30,6 +30,10 @@
 #          +- latest => config_2021-09-01-r1
 #             (symlink to most recently stored file)
 #
+# The default config store dir is "~/git/kconfig-files".
+# (See the "-C", "--config" option.)
+#
+#
 # Changed files will be automatically committed
 # if the config store directory is part of a git repository.
 #
