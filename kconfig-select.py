@@ -399,7 +399,15 @@ class LinuxBuildType(BuildType):
     NAME = "linux"
 
     def detect(self, guess_ckey=False):
-        return False
+        try:
+            with open(os.path.join(self.info.src_dir, "README"), "rt") as fh:
+                first_line = fh.readline().strip()
+
+        except FileNotFoundError:
+            return False
+
+        return (first_line == "Linux kernel")
+    # --- end of detect (...) ---
 
     def prepare_build(self):
         self.prepare_build_outoftree()
